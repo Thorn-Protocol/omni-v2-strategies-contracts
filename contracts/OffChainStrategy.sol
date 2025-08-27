@@ -122,7 +122,6 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
     }
 
     function agentWithdraw(uint256 assets) public onlyAgent {
-        require(msg.sender == agent, "Only agent can withdraw");
         totalIdle -= assets;
         totalDebt += assets;
         IERC20(asset()).transfer(agent, assets);
@@ -138,7 +137,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
         emit AgentDeposit(assets, totalIdle, totalDebt);
     }
 
-    function updateDebt(uint256 _totalDebt) public onlyGovernance {
+    function updateDebt(uint256 _totalDebt) public onlyAgent {
         totalDebt = _totalDebt;
         emit AssetUpdated(totalIdle, totalDebt);
     }

@@ -8,5 +8,5 @@ interface IOffChainStrategy {
 
     function agentWithdraw(uint256 assets) external;
     function agentDeposit(uint256 assets) external;
-    function updateDebt(uint256 _totalDebt) external;
+    function updateDebt(uint256 profit, uint loss) external;
 }

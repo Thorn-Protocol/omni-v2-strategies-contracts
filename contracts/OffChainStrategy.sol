@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import {ERC4626, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-
 import {IOffChainStrategy} from "./interfaces/IOffChainStrategy.sol";
 
 contract OffChainStrategy is IOffChainStrategy, ERC4626 {
@@ -137,8 +136,13 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
         emit AgentDeposit(assets, totalIdle, totalDebt);
     }
 
-    function updateDebt(uint256 _totalDebt) public onlyAgent {
-        totalDebt = _totalDebt;
+    function updateDebt(uint256 profit, uint loss) public onlyAgent {
+        require(profit == 0 || loss == 0, "Profit and loss must be 0");
+        if (profit > 0) {
+            totalDebt += profit;
+        } else {
+            totalDebt -= loss;
+        }
         emit AssetUpdated(totalIdle, totalDebt);
     }
 }

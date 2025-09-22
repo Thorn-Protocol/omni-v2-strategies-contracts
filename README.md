@@ -1,13 +1,9 @@
-# Sample Hardhat Project
+# Strategies for OmniFarming
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+This is a repo that aggregates, stores, and builds strategies for OmniFarming V2. The strategies are written in the ERC4626 standard.
 
-Try running some of the following tasks:
+# Contracts
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.ts
-```
+### OffChainStrategy
+
+OffChain Strategy is a strategy that integrates ROFL with the purpose of farming through off-chain logic. The strategy is designed with an authorized address to be able to withdraw funds from the strategy, farm them outside, and update profits to the vault.

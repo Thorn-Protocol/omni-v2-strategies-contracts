@@ -5,7 +5,6 @@ import {ERC4626, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IOffChainStrategy} from "./interfaces/IOffChainStrategy.sol";
-
 contract OffChainStrategy is IOffChainStrategy, ERC4626 {
     address public governance;
     address public agent;
@@ -144,5 +143,15 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
             totalDebt -= loss;
         }
         emit AssetUpdated(totalIdle, totalDebt);
+    }
+
+    function changeAgent(address newAgent) public onlyGovernance {
+        agent = newAgent;
+        emit AgentChanged(newAgent);
+    }
+
+    function changeGovernance(address newGovernance) public onlyGovernance {
+        governance = newGovernance;
+        emit GovernanceChanged(newGovernance);
     }
 }

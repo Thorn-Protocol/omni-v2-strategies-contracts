@@ -13,8 +13,10 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
     uint256 public totalIdle;
     uint256 public totalDebt;
 
+    uint256 public expectTotalIdle;
+
     modifier onlyAgent() {
-        require(msg.sender == agent, "Only agent can call this function");
+        require(msg.sender == agent, "Only agent can call this function ");
         _;
     }
 
@@ -241,6 +243,13 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
             totalDebt -= loss;
         }
         emit AssetUpdated(totalIdle, totalDebt);
+    }
+
+    function setExpectTotalIdle(
+        uint256 _expectTotalIdle
+    ) public onlyGovernance {
+        expectTotalIdle = _expectTotalIdle;
+        emit ExpectTotalIdleUpdated(_expectTotalIdle);
     }
 
     /**

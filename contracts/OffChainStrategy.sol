@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {ERC4626, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IOffChainStrategy} from "./interfaces/IOffChainStrategy.sol";
 
-contract OffChainStrategy is IOffChainStrategy, ERC4626 {
-    address public immutable vault;
+
+contract OffChainStrategy is IOffChainStrategy, ERC4626Upgradeable {
+    using SafeERC20 for IERC20;
+
+    address public vault;
     address public governance;
     address public agent;
     uint256 public totalIdle;
@@ -33,12 +37,14 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
         _;
     }
 
-    constructor(
+    function initialize(
         IERC20 _asset,
         string memory _name,
         string memory _symbol,
         address _vault
-    ) ERC4626(_asset) ERC20(_name, _symbol) {
+    ) public initializer {
+        __ERC20_init(_name, _symbol);
+        __ERC4626_init(_asset);
         governance = msg.sender;
         vault = _vault;
     }
@@ -89,7 +95,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      */
     function maxWithdraw(
         address owner
-    ) public view override onlyVault returns (uint256) {
+    ) public view override returns (uint256) {
         return
             Math.min(
                 _convertToAssets(balanceOf(owner), Math.Rounding.Floor),
@@ -104,7 +110,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      */
     function maxRedeem(
         address owner
-    ) public view override onlyVault returns (uint256) {
+    ) public view override returns (uint256) {
         return
             Math.min(
                 balanceOf(owner),
@@ -124,7 +130,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
         address receiver,
         uint256 assets,
         uint256 shares
-    ) internal override onlyVault {
+    ) internal override {
         super._deposit(caller, receiver, assets, shares);
         totalIdle += assets;
         emit AssetUpdated(totalIdle, totalDebt);
@@ -144,7 +150,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
         address owner,
         uint256 assets,
         uint256 shares
-    ) internal override onlyVault {
+    ) internal override {
         super._withdraw(caller, receiver, owner, assets, shares);
         totalIdle -= assets;
         emit AssetUpdated(totalIdle, totalDebt);
@@ -210,10 +216,10 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      * @dev Allows the agent to withdraw assets from the strategy
      * @param assets The amount of assets to withdraw
      */
-    function agentWithdraw(uint256 assets) public onlyAgent onlyVault {
+    function agentWithdraw(uint256 assets) public onlyAgent {
         totalIdle -= assets;
         totalDebt += assets;
-        IERC20(asset()).transfer(agent, assets);
+        IERC20(asset()).safeTransfer(agent, assets);
         emit AssetUpdated(totalIdle, totalDebt);
         emit AgentWithdraw(assets, totalIdle, totalDebt);
     }
@@ -222,10 +228,10 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      * @dev Allows the agent to deposit assets back to the strategy
      * @param assets The amount of assets to deposit
      */
-    function agentDeposit(uint256 assets) public onlyAgent onlyVault {
+    function agentDeposit(uint256 assets) public onlyAgent {
         totalIdle += assets;
         totalDebt -= Math.min(assets, totalDebt);
-        IERC20(asset()).transferFrom(agent, address(this), assets);
+        IERC20(asset()).safeTransferFrom(agent, address(this), assets);
         emit AssetUpdated(totalIdle, totalDebt);
         emit AgentDeposit(assets, totalIdle, totalDebt);
     }
@@ -235,7 +241,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      * @param profit The amount of profit to add to debt (must be 0 if loss > 0)
      * @param loss The amount of loss to subtract from debt (must be 0 if profit > 0)
      */
-    function updateDebt(uint256 profit, uint loss) public onlyAgent onlyVault {
+    function updateDebt(uint256 profit, uint loss) public onlyAgent {
         require(profit == 0 || loss == 0, "Profit and loss must be 0");
         if (profit > 0) {
             totalDebt += profit;
@@ -256,7 +262,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      * @dev Changes the agent address (only governance can call this)
      * @param newAgent The new agent address
      */
-    function changeAgent(address newAgent) public onlyGovernance onlyVault {
+    function changeAgent(address newAgent) public onlyGovernance {
         agent = newAgent;
         emit AgentChanged(newAgent);
     }
@@ -267,7 +273,7 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626 {
      */
     function changeGovernance(
         address newGovernance
-    ) public onlyGovernance onlyVault {
+    ) public onlyGovernance {
         governance = newGovernance;
         emit GovernanceChanged(newGovernance);
     }

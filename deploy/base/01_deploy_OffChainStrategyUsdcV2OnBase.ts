@@ -11,11 +11,18 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await deploy("OffChainStrategyUsdcV2OnBase", {
     contract: "OffChainStrategy",
     from: deployer,
-    args: [addresses.base.usdc, "OffChain Omni USDC", "omni USDC"],
+    proxy: {
+      owner: deployer,
+      execute: {
+        init: {
+          methodName: "initialize",
+          args: [addresses.base.usdc, "OffChain Omni USDC", "omni USDC", addresses.base.vault],
+        },
+      },
+    },
     log: true,
   });
 
-  await execute("OffChainStrategyUsdcV2OnBase", { from: deployer }, "changeAgent", [""]);
 };
 deploy.tags = ["off-chain-strategy-usdc-v2-on-base"];
 export default deploy;

@@ -14,8 +14,8 @@ contract OffChainStrategy is IOffChainStrategy, ERC4626Upgradeable {
     address public vault;
     address public governance;
     address public agent;
-    uint256 public totalIdle;
-    uint256 public totalDebt;
+    uint256 public totalIdle; // represents idle funds in the strategy
+    uint256 public totalDebt; // represents funds at the agent/protocols.
 
     uint256 public expectTotalIdle;
 
